@@ -17,10 +17,10 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: str = "*"  # Comma-separated list or "*" for all
 
     # AI Configuration
-    AI_PROVIDER: str = "gemini"  # "openai" or "gemini"
+    AI_PROVIDER: str = "openai"  # "openai" or "gemini"
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
-    AI_MODEL: str = "gemini-1.5-flash"  # Default to stable model
+    AI_MODEL: str = "gpt-3.5-turbo"  # Default to accessible OpenAI model
     AI_TEMPERATURE: float = 0.7
     AI_MAX_TOKENS: int = 1000
 
