@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     AI_PROVIDER: str = "gemini"  # "openai" or "gemini"
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
-    AI_MODEL: str = "gemini-2.5-flash-preview-04"  # Latest Gemini 2.5
+    AI_MODEL: str = "gemini-1.5-flash"  # Default to stable model
     AI_TEMPERATURE: float = 0.7
     AI_MAX_TOKENS: int = 1000
 

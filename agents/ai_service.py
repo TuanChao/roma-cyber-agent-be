@@ -7,6 +7,7 @@ from loguru import logger
 import google.generativeai as genai
 from openai import AsyncOpenAI
 import json
+import os
 
 from config.settings import settings
 
@@ -19,9 +20,10 @@ class AIService:
 
         if self.provider == "gemini":
             genai.configure(api_key=settings.GEMINI_API_KEY)
-            # Use Gemini 2.0 Flash (stable and widely available)
-            self.model = genai.GenerativeModel('gemini-2.0-flash-exp')
-            logger.info("🤖 Using Google Gemini 2.0 Flash")
+            # Use model from environment variable or settings
+            model_name = os.environ.get('GEMINI_MODEL', settings.AI_MODEL)
+            self.model = genai.GenerativeModel(model_name)
+            logger.info(f"🤖 Using Google Gemini: {model_name}")
         elif self.provider == "openai":
             self.client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
             logger.info("🤖 Using OpenAI GPT")
