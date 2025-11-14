@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from loguru import logger
 import asyncio
 from datetime import datetime
+from contextlib import asynccontextmanager
 
 from agents.network_monitor import NetworkMonitorAgent
 from agents.attack_simulator import AttackSimulatorAgent
@@ -18,11 +19,52 @@ from agents.ai_coordinator import AIResponseCoordinator
 from utils.notifications import notification_service
 from config.settings import settings
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize agents on startup and cleanup on shutdown"""
+    # Startup
+    logger.info("🚀 Starting Security Monitoring Agent System...")
+
+    try:
+        # Initialize agents
+        agents["network_monitor"] = NetworkMonitorAgent(
+            interface=settings.NETWORK_INTERFACE,
+            broadcast_callback=broadcast_alert
+        )
+        agents["attack_simulator"] = AttackSimulatorAgent()
+        agents["ai_coordinator"] = AIResponseCoordinator()
+
+        # Start core agents
+        await agents["attack_simulator"].start()
+        await agents["ai_coordinator"].start()
+
+        # Network monitor starts on demand
+        logger.success("✅ All agents initialized successfully")
+
+    except Exception as e:
+        logger.error(f"❌ Startup failed: {e}")
+        raise
+
+    yield  # Application is running
+
+    # Shutdown
+    logger.info("🛑 Shutting down Security Monitoring Agent System...")
+
+    for name, agent in agents.items():
+        try:
+            await agent.stop()
+            logger.info(f"✓ Stopped {name}")
+        except Exception as e:
+            logger.error(f"❌ Error stopping {name}: {e}")
+
+
 # Initialize FastAPI app
 app = FastAPI(
     title="Security Monitoring Agent System",
     description="AI-powered security monitoring and attack simulation platform",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # CORS middleware - configurable via environment
@@ -49,45 +91,6 @@ logger.add(
     level=settings.LOG_LEVEL,
     format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {message}"
 )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Initialize agents on startup"""
-    logger.info("🚀 Starting Security Monitoring Agent System...")
-
-    try:
-        # Initialize agents
-        agents["network_monitor"] = NetworkMonitorAgent(
-            interface=settings.NETWORK_INTERFACE,
-            broadcast_callback=broadcast_alert
-        )
-        agents["attack_simulator"] = AttackSimulatorAgent()
-        agents["ai_coordinator"] = AIResponseCoordinator()
-
-        # Start core agents
-        await agents["attack_simulator"].start()
-        await agents["ai_coordinator"].start()
-
-        # Network monitor starts on demand
-        logger.success("✅ All agents initialized successfully")
-
-    except Exception as e:
-        logger.error(f"❌ Startup failed: {e}")
-        raise
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Cleanup on shutdown"""
-    logger.info("🛑 Shutting down Security Monitoring Agent System...")
-
-    for name, agent in agents.items():
-        try:
-            await agent.stop()
-            logger.info(f"✓ Stopped {name}")
-        except Exception as e:
-            logger.error(f"❌ Error stopping {name}: {e}")
 
 
 # ============================================================================
