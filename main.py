@@ -407,15 +407,19 @@ async def get_dashboard_overview():
 
 if __name__ == "__main__":
     import uvicorn
+    import os
 
+    # Get port from environment (Railway sets PORT env var)
+    port = int(os.environ.get("PORT", settings.API_PORT))
+    
     logger.info("🚀 Starting Security Monitoring Agent System API...")
-    logger.info(f"📡 Host: {settings.API_HOST}:{settings.API_PORT}")
+    logger.info(f"📡 Host: {settings.API_HOST}:{port}")
     logger.info(f"🔧 Debug: {settings.DEBUG}")
 
     uvicorn.run(
         "main:app",
         host=settings.API_HOST,
-        port=settings.API_PORT,
+        port=port,
         reload=settings.DEBUG,
         log_level=settings.LOG_LEVEL.lower()
     )
